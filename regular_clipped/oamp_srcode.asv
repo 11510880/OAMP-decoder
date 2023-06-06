@@ -1,4 +1,5 @@
-clear all;clc;
+clear all;
+clc;
 % constants
 B = 64;
 L = 2048;
@@ -31,18 +32,13 @@ vxpris = zeros(1, maxIter);
 % the true mse each iteration
 mses = zeros(1, maxIter);
 for i=1:maxIter
-   fprintf("iteration number %d \n", i);
-   vzpris(i) = vZpri;
-   [zPost,vZpost] = declip(y, zPri(order), vZpri, sigma, epsilon);
-   % zPost M * 1,  zPri, N * 1
-   [vZorth, zOrth] = orthogonalization(vZpost, vZpri, zPost, zPri, order);
+   fprintf("iteration number %d \n", i);           
    
    vXpri = vZorth;
    vxpris(i) = vXpri;
    xPri = idct(zOrth);
    % vXpri = max(vXpri, 1e-6);    
    [xPost,vXpost] = sr_demodulation(B, L, vXpri, xPri);
-%     [xPost,vXpost,Posi] = NLD_LOOP(B, L, xPri,vXpri);
    % xPost N * 1,  xPri, N * 1
    [vXorth,xOrth] = orthogonalization(vXpost,vXpri, xPost, xPri);
    mses(i) = norm(xOrth - x)^2 / length(x);
@@ -51,14 +47,6 @@ for i=1:maxIter
    fprintf("vXpri: %d, vZpri: %d, mse: %d \n", vXpri, vZpri, mses(i));
 end
 
-figure
-plot(1:maxIter, vxpris);
-
-figure
-plot(1:maxIter, vzpris);
-
-figure
-plot(1:maxIter, mses);
 
 figure
 semilogy(1:maxIter, vzpris, "-x");
@@ -69,7 +57,12 @@ xlabel("iteration number");
 ylabel("MSE");
 
 figure
-semilogy("x");
+semilogx(vzpris, vxpris, 'r');
+hold on
+semilogx([vzpris(2:end), vZpri], vxpris,  'b');
+legend("de-clip", "de-modulation");
+xlabel("vz");
+ylabel("vx");
 
 
 

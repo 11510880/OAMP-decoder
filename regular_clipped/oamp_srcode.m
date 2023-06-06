@@ -1,9 +1,10 @@
-clear all;clc;
+clear all;
+clc;
 % constants
 B = 64;
 L = 2048;
 CR = -13;
-SNR = 2;
+SNR = 2.0;
 R = 0.5;
 maxIter = 50;
 N = B * L;
@@ -44,6 +45,7 @@ for i=1:maxIter
    [xPost,vXpost] = sr_demodulation(B, L, vXpri, xPri);
    % xPost N * 1,  xPri, N * 1
    [vXorth,xOrth] = orthogonalization(vXpost,vXpri, xPost, xPri);
+%    xOrth(xOrth < 1e-6) = 0;
    mses(i) = norm(xOrth - x)^2 / length(x);
    vZpri = vXorth;
    zPri = dct(xOrth);

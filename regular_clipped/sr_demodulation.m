@@ -14,6 +14,7 @@ p = p ./ pSum;
 
 xPost = sqrt(B) .* p;
 secondMoment = B .* p;
+% vXpost = max(0, mean(mean(secondMoment - xPost.*xPost)));
 vXpost = max(1e-6, mean(mean(secondMoment - xPost.*xPost)));
 xPost = reshape(xPost, B * L, 1);
 end

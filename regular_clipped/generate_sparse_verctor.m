@@ -5,7 +5,7 @@ function [x] = generate_sparse_verctor(B,L)
 x = zeros(B * L, 1);
 for i = 0:L-1
     position = randi(B);
-    fprintf("non-zero postion %d \n", position);
+    %fprintf("non-zero postion %d \n", position);
     x(i*B+position) = sqrt(B);
 end
 end

@@ -1,7 +1,8 @@
 function [vOrth,uOrth] = orthogonalization(vPost,vPri, uPost, uPri, order)
 %ORTHOGONALIZATION  normalization of means and variances
 if nargin == 5
-    vPri =  max(vPri, 1e-5);
+%     vPri =  max(vPri, 1e-5);
+%     vPri =  max(vPri, 0);
     M = length(uPost);
     N = length(uPri);
     delta = M /N;
