@@ -20,19 +20,21 @@ d1 = sqrt(pi) / 2 .* erfc(w1);
 d2 = sqrt(pi) / 2 .* (erfc(-inf) - erfc(w2));
 d3 = sqrt(pi) / 2 .* (erfc(w3) - erfc(w4));
 
-marginalLikelihood =  c1  .* d1 +  c2 .* d2 + c3 .* d3;
+marginalLikelihood =  (c1  .* d1 +  c2 .* d2 + c3 .* d3) / sqrt(2*pi*sigma);
+% marginalLikelihood = max(1e-12, marginalLikelihood);
 
 zPost = c1 .* (sqrt(vZpri/2) .* exp(-w1.^2) + zPri .* d1) + ...,
         c2 .* (-sqrt(vZpri/2) .* exp(-w2.^2) + zPri .* d2) + ...,
         c3 .* (sqrt(vZstar/2) .* (exp(-w3.^2) - exp(-w4.^2)) + zStar .* d3);
     
-zPost = zPost ./ marginalLikelihood;
+zPost = zPost ./ marginalLikelihood ./ sqrt(2*pi*sigma);
     
 
 secondMoment =  c1 .* (vZpri .* (w1 .* exp(-w1.^2) + d1) + sqrt(2 .* vZpri) .* zPri .* exp(-w1.^2) + zPri.^2 .* d1) + ...,
                 c2 .* (vZpri .* (-w2 .* exp(-w2.^2) + d2) - sqrt(2 .* vZpri) .* zPri .* exp(-w2.^2) + zPri.^2 .* d2) + ...,
-                c3 .* (vZstar .* (w3 .* exp(-w1.^2) -w4 .* exp(-w4.^2) + d3) + sqrt(2 .* vZstar) * zStar .* (exp(-w3.^2)-exp(-w4.^2))+ zStar.^2 .* d3);
+                c3 .* (vZstar .* (w3 .* exp(-w3.^2) -w4 .* exp(-w4.^2) + d3) + sqrt(2 .* vZstar) * zStar .* (exp(-w3.^2)-exp(-w4.^2))+ zStar.^2 .* d3);
+secondMoment = secondMoment ./sqrt(2*pi*sigma);
 vPost = secondMoment ./ marginalLikelihood - zPost.^2;
-vPost = sum(vPost) / length(vPost);
+vPost = mean(vPost);
 end
 

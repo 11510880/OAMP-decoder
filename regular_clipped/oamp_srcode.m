@@ -3,74 +3,49 @@ clc;
 % constants
 B = 64;
 L = 2048;
-CR = -13;
-SNR = 2.0;
-R = 0.5;
+CR = -3;
+SNRs = 7:0.25:9;
+SNRs_irr = 5:0.25:7;
+R = 1;
 maxIter = 50;
 N = B * L;
-
-% generate sparse x
-x = generate_sparse_verctor(B,L);
-M = L * log2(B) / R;
-z_full = dct(x);
-rng("default");
-order = randperm(N, M);
-z = z_full(order);
-% get clipped threshold
-epsilon = get_threshold_by_cr(CR,z);
-signal = clip(z, epsilon);
-[y, alpha, sigma] = linear_model_clip(signal,SNR);   
-
-% initialize the input to the LMMSE part
-zPri = zeros(N, 1); 
-vZpri = 1;
-delta = M / N;
-% output variance of estimation of NLE, i.e., prediction of MSE
-vzpris = zeros(1, maxIter);
-% output variance of estimation of LE
-vxpris = zeros(1, maxIter);
-% the true mse each iteration
-mses = zeros(1, maxIter);
-for i=1:maxIter
-   fprintf("iteration number %d \n", i);
-   vzpris(i) = vZpri;
-   [zPost,vZpost] = declip(y, zPri(order), vZpri, sigma, epsilon);
-   % zPost M * 1,  zPri, N * 1
-   [vZorth, zOrth] = orthogonalization(vZpost, vZpri, zPost, zPri, order);
-   
-   vXpri = vZorth;
-   vxpris(i) = vXpri;
-   xPri = idct(zOrth);
-   % vXpri = max(vXpri, 1e-6);    
-   [xPost,vXpost] = sr_demodulation(B, L, vXpri, xPri);
-   % xPost N * 1,  xPri, N * 1
-   [vXorth,xOrth] = orthogonalization(vXpost,vXpri, xPost, xPri);
-%    xOrth(xOrth < 1e-6) = 0;
-   mses(i) = norm(xOrth - x)^2 / length(x);
-   vZpri = vXorth;
-   zPri = dct(xOrth);
-   fprintf("vXpri: %d, vZpri: %d, mse: %d \n", vXpri, vZpri, mses(i));
+rng("shuffle");
+simulationTimes = 1;
+SER_rclip = zeros(length(SNRs), simulationTimes);
+SER_irclip = zeros(length(SNRs_irr), simulationTimes);
+numLevels = 64;
+for simuTime=1:simulationTimes
+    SERs = zeros(length(SNRs), 1);
+    for i=1:length(SNRs)
+        SNR = SNRs(i);
+%         errorSectionRate = oamp_clip(B,L,CR,N,R,SNR,maxIter);
+        errorSectionRate=oamp_quant(B,L,numLevels,N,R,SNR,maxIter);
+        SERs(i) = errorSectionRate;
+    end
+    
+    SERs(SERs<1e-5) = 1e-5;
+    SER_rclip(:,simuTime) = SERs;
+    
+    %% irregular clip
+    load("clippedRatios.mat");
+    load("lambdas.mat")
+    
+    for i=1:length(SNRs_irr)
+        SNR = SNRs_irr(i);
+        errorSectionRate = omap_clip_irr(B,L,clippedRatios,lambdas,N,R,SNR,maxIter);
+        SERs(i) = errorSectionRate;
+    end
+    
+    SERs(SERs<1e-5) = 1e-5;
+    SER_irclip(:,simuTime) = SERs;
 end
-
-
 figure
-semilogy(1:maxIter, vzpris, "-x");
+semilogy(SNRs, mean(SER_rclip,2), '-x');
 hold on
-semilogy(1:maxIter, mses, '-^');
-legend("Predicted MSE", "True MSE");
-xlabel("iteration number");
-ylabel("MSE");
-
-figure
-semilogx(vzpris, vxpris, 'r');
-hold on
-semilogx([vzpris(2:end), vZpri], vxpris,  'b');
-legend("de-clip", "de-modulation");
-xlabel("vz");
-ylabel("vx");
-
-
-
+semilogy(SNRs_irr, mean(SER_irclip,2), '-^');
+xlabel("SNR(dB)");
+ylabel("Section Error Rate(SER)");
+legend("Regular clip", "Irregular clip");
 
 
 

@@ -47,7 +47,7 @@ mse_s = zeros(1, maxIter);
 v_t = 0;
 for iter = 1:maxIter
     %fprintf("iteration %d mse before mmse: %d\n", iter, 1/ N * (norm(s - signal) .^2));
-    v_hat = max(0.0000001, (norm(y - A * s) .^2 - M * sigma) / trace(A'* A));
+    v_hat = max(1e6, (norm(y - A * s) .^2 - M * sigma) / trace(A'* A));
     wOptimize = w_optimize(A, v_hat, sigma);
     r = s + wOptimize * (y - A * s);
     B = eye(N) - wOptimize * A;
