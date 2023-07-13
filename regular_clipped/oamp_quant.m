@@ -1,4 +1,4 @@
-function [errorSectionRate] = oamp_quant(B,L,numLevels,N,R,SNR,maxIter)
+function [errorSectionRate, x, xOrth] = oamp_quant(B,L,numLevels,N,R,SNR,maxIter)
 %oamp_quant oamp for decoding of quantized SR codes
 [x, positions] = generate_sparse_verctor(B,L);
 M = L * log2(B) / R;
@@ -60,6 +60,10 @@ for i = 0:L-1
     oneBlock = xOrth(i * B+1: (i+1) * B);
     maxValueOneBlockIndex = find(oneBlock == max(oneBlock));
     recoverPosition = i * B + maxValueOneBlockIndex;
+    if(isempty(recoverPosition))
+        errorSections = errorSections + 1;
+        continue;
+    end
     recoverPositions(i+1) = recoverPosition;
     if (recoverPositions(i+1) - positions(i+1)) > 1e-6
         errorSections = errorSections + 1;

@@ -13,11 +13,12 @@ R = 1;
 maxIter = 50;
 N = B * L;
 rng("shuffle");
-numLevels = 48;
+numLevels = 256;
 [x, positions] = generate_sparse_verctor(B,L);
 M = L * log2(B) / R;
 z_full = dct(x);
 vZpris = 0.1:0.1:2.0;
+% vZpris = [1.5];
 vZposts = zeros(length(vZpris),1);
 vars = zeros(length(vZpris),1);
 %% clip and declip
@@ -38,13 +39,15 @@ for i=1:length(vZpris)
     vZpri = vZpris(i);
     noise = sqrt(vZpri) * randn(length(z_full), 1);
     z_gauss = z_full + noise;
-    quant_max = max(z_gauss);
-%     quant_max = prctile(z_gauss, 99.99);
+%     quant_max = max(z_gauss);
+    quant_max = prctile(z_gauss, 99.99);
     [z_full_quant, quant_levels,quant_bounds] = uniform_quantizer(z_gauss, numLevels, quant_max);
     [y, alpha, sigma] = linear_model_clip(z_full_quant, SNR);
     [zPost,vZpost] = de_quant(y, z_gauss, vZpri, sigma, quant_levels,quant_bounds);
+%     [zPost,vZpost] = de_quant(y, zPri(order), vZpri, sigma, quant_levels,quant_bounds);
     vZposts(i) = vZpost;
     vars(i) = var(zPost - z_gauss);
+    
 end
 
 plot(vZpris, vars, '-*');
